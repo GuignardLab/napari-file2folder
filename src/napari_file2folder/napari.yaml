@@ -1,0 +1,14 @@
+name: napari-file2folder
+display_name: Save multidimensional file as folder of tifs
+# use 'hidden' to remove plugin from napari hub search results
+visibility: public
+# see https://napari.org/stable/plugins/manifest.html for valid categories
+categories: ["Annotation", "Segmentation", "Acquisition"]
+contributions:
+  commands:
+    - id: napari-file2folder.make_qwidget
+      python_name: napari_file2folder:ExampleQWidget
+      title: Save multidimensional file as folder of tifs
+  widgets:
+    - command: napari-file2folder.make_qwidget
+      display_name: Save multidimensional file as folder of tifs
