@@ -7,7 +7,7 @@ categories: ["Annotation", "Segmentation", "Acquisition"]
 contributions:
   commands:
     - id: napari-file2folder.make_qwidget
-      python_name: napari_file2folder:ExampleQWidget
+      python_name: napari_file2folder:File2FolderWidget
       title: Save multidimensional file as folder of tifs
   widgets:
     - command: napari-file2folder.make_qwidget

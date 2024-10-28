@@ -14,46 +14,23 @@ from magicgui.widgets import (
 )
 import os
 import tifffile
-import numpy as np
-import zarr
-import dask.array as da
+from bioio import BioImage
 
 if TYPE_CHECKING:
     import napari
 
-import gc
-import dask
 
+class File2FolderWidget(QWidget):
 
-
-
-class ExampleQWidget(QWidget):
-    # your QWidget.__init__ can optionally request the napari viewer instance
-    # use a type annotation of 'napari.viewer.Viewer' for any parameter
     def __init__(self, viewer: "napari.viewer.Viewer"):
         super().__init__()
 
         self._viewer = viewer
-        # self._current_shape = None
-
-        # self._array_layer_combo = create_widget(
-        #     widget_type="ComboBox",
-        #     label="Array",
-        #     options={"nullable": False},
-        # )
-
-        # viewer.layers.events.changed.connect(self._update_layer_combos)
-        # viewer.layers.events.reordered.connect(self._update_layer_combos)
-        # viewer.layers.events.moved.connect(self._update_layer_combos)
-        # viewer.layers.events.removed.connect(self._update_layer_combos)
-        # viewer.layers.events.removing.connect(self._update_layer_combos)
-        # viewer.layers.events.inserted.connect(self._update_layer_combos)
-        # viewer.layers.events.inserting.connect(self._update_layer_combos)
 
         self._array_file_path = create_widget(
             widget_type="FileEdit",
             label="Array file",
-            options={"mode": "r", "filter": "*.tif"},
+            options={"mode": "r"},
         )
         
         self._array_file_path.changed.connect(self._update_dimensions)
@@ -76,12 +53,9 @@ class ExampleQWidget(QWidget):
         )
 
         self._refresh_button.native.clicked.connect(self._update_dimensions)
-        # self._array_layer_combo.native.currentIndexChanged.connect(self._update_dimensions)
-        # self._array_layer_combo.native.currentTextChanged.connect(self._update_dimensions)
 
         self._default_shape_text = f"Shape: <a style=color:#D41159;>None</a>"
         self._shape_text = QLabel(self._default_shape_text)
-        # self._array_layer_combo.bind(self._bind_layer_combo)
 
         self._dimension_choice_combo = create_widget(
             widget_type="ComboBox",
@@ -215,7 +189,7 @@ class ExampleQWidget(QWidget):
 
                 self._lazy_save_slices_tif(
                     slice_dim=dimension_index,
-                    tif_file=str(path),
+                    file=str(path),
                     path_to_save=path_to_folder,
                     compress_args=compress_params
                 )
@@ -258,7 +232,7 @@ class ExampleQWidget(QWidget):
             middle_slice = self._lazy_grab_slice_tif(
                 element_index=int(dimension_shape/2),
                 slice_dim=dimension_index,
-                tif_file=str(path)
+                file=str(path)
             )
             if middle_slice is None:
                 napari.utils.notifications.show_warning(
@@ -272,13 +246,13 @@ class ExampleQWidget(QWidget):
             )
 
     
-    def _lazy_save_slices_tif(self, slice_dim: int, tif_file: str, path_to_save: str,
+    def _lazy_save_slices_tif(self, slice_dim: int, file: str, path_to_save: str,
                               compress_args: dict = {}):
         """
         Lazily slice a multidimensional TIF file along a specified dimension.
 
         Parameters:
-        - tif_file: path to the TIF file.
+        - file: path to the image file.
         - slice_dim: the dimension (axis) along which to slice.
         - path_to_save: path to the folder where to save the slices.
         - compress_args: dictionary of arguments to pass to tifffile.imwrite.
@@ -287,80 +261,74 @@ class ExampleQWidget(QWidget):
         - The element of the sliced array at the specified index.
         """
 
-        dask.config.set({"array.cache": 0})
+        img = BioImage(file)
+        shape = tuple([elem for elem in img.shape if elem != 1])
+        lazy_array = img.dask_data.reshape(shape)   
 
-        with tifffile.TiffFile(tif_file) as tif:
-            shape = tif.series[0].shape
             
-            slices = [slice(None) for _ in range(len(shape))]
+        slices = [slice(None) for _ in range(len(shape))]
 
-            zarr_store = tif.series[0].aszarr()
-            zarr_array = zarr.open(zarr_store)
+        for element_index in range(shape[slice_dim]):
+            slices[slice_dim] = element_index
+            
+            stack = lazy_array[tuple(slices)].compute()
 
-            for element_index in range(shape[slice_dim]):
-                slices[slice_dim] = element_index
-                
-                stack = da.from_array(zarr_array[tuple(slices)]).compute()
+            name_tif = file.split(os.sep)[-1].split('.')[0]
 
-                name_tif = tif_file.split(os.sep)[-1].split('.')[0]
+            tifffile.imwrite(
+                f"{path_to_save}/{name_tif}_slice{element_index:03d}.tif",
+                stack,
+                **compress_args
+            )
 
-                tifffile.imwrite(
-                    f"{path_to_save}/{name_tif}_slice{element_index:03d}.tif",
-                    stack,
-                    **compress_args
-                )
-
-                self._progress_bar.setValue(
-                    int((element_index+1)/shape[slice_dim]*100)
-                )
-
-                del stack
-                gc.collect()
-
-            zarr_store.close()
+            self._progress_bar.setValue(
+                int((element_index+1)/shape[slice_dim]*100)
+            )
 
                 
 
 
 
-    def _lazy_grab_slice_tif(self, slice_dim, tif_file, element_index: int = None):
+    def _lazy_grab_slice_tif(self, slice_dim, file, element_index: int = None):
         """
         Lazily slice a multidimensional TIF file along a specified dimension.
 
         Parameters:
-        - tif_file: path to the TIF file.
+        - file: path to the TIF file.
         - slice_dim: the dimension (axis) along which to slice.
         - element_index: the index of the element to retrieve along the slice dimension.
         
         Returns:
         - The element of the sliced array at the specified index.
         """
-        with tifffile.TiffFile(tif_file) as tif:
-            shape = tif.series[0].shape
-            
-            slices = [slice(None) for _ in range(len(shape))]
+        
+    
+        img = BioImage(file)
+        shape = tuple([elem for elem in img.shape if elem != 1])
+        lazy_array = img.dask_data.reshape(shape)
+        
+        slices = [slice(None) for _ in range(len(shape))]
 
-            zarr_array = zarr.open(tif.series[0].aszarr())
+        slices[slice_dim] = element_index
 
-            slices[slice_dim] = element_index
+        stack = lazy_array[tuple(slices)]
 
-            stack = zarr_array[tuple(slices)]
-
-            return stack
+        return stack.compute()
 
 
-    def _lazy_shape_tif(self, tif_file):
+    def _lazy_shape_tif(self, file):
         """
-        Lazily retrieve the shape of a multidimensional TIF file.
+        Lazily retrieve the shape of a multidimensional file.
 
         Parameters:
-        - tif_file: path to the TIF file.
+        - file: path to the image file.
 
         Returns:
-        - The shape of the TIF file.
+        - The shape of the image file.
         """
-        with tifffile.TiffFile(tif_file) as tif:
-            shape = tif.series[0].shape
+
+        img = BioImage(file)
+        shape = tuple([elem for elem in img.shape if elem != 1])
 
         return shape
 
@@ -446,7 +414,7 @@ if __name__ == "__main__":
     import napari
 
     viewer = napari.Viewer()
-    widget = ExampleQWidget(viewer)
+    widget = File2FolderWidget(viewer)
     viewer.window.add_dock_widget(widget)
 
     napari.run()
