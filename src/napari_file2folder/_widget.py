@@ -369,7 +369,6 @@ class File2FolderWidget(QWidget):
         return shape
 
     def _update_dimensions(self):
-        print("Updating dimensions")
         # layer = self._array_layer_combo.value
         path = self._array_file_path.value
         if str(path) != "." and os.path.isfile(path):
