@@ -283,6 +283,10 @@ class File2FolderWidget(QWidget):
                         stack,
                         **compress_args
                     )
+
+                    self._progress_bar.setValue(
+                        int((element_index+1)/shape[slice_dim]*100)
+                    )
         else:
             img = BioImage(file)
             shape = tuple([elem for elem in img.shape if elem != 1])

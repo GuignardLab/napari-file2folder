@@ -7,21 +7,39 @@
 [![codecov](https://codecov.io/gh/jules-vanaret/napari-file2folder/branch/main/graph/badge.svg)](https://codecov.io/gh/jules-vanaret/napari-file2folder)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-file2folder)](https://napari-hub.org/plugins/napari-file2folder)
 
-Save multidimensional file as folder of tifs
+<img src="https://github.com/GuignardLab/tapenade/blob/main/imgs/tapenade3.png" width="100">
 
-----------------------------------
+A plugin to inspect bioimages (e.g. .tif, .czi, .nd2, .lsm...) and save them as individual .tif files in a folder.
 
-This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
+`napari-file2folder` is a [napari] plugin that is part of the [Tapenade](https://github.com/GuignardLab/tapenade) project. Tapenade is a tool for the analysis of dense 3D tissues acquired with deep imaging microscopy. It is designed to be user-friendly and to provide a comprehensive analysis of the data.
 
-<!--
-Don't miss the full getting started guide to set up your new package:
-https://github.com/napari/cookiecutter-napari-plugin#getting-started
+If you use this plugin for your research, please [cite us](https://github.com/GuignardLab/tapenade/blob/main/README.md#how-to-cite).
 
-and review the napari docs for plugin developers:
-https://napari.org/stable/plugins/index.html
--->
+## Overview
+
+<img src="imgs/napari-file2folder-demo.gif"/>
+
+This plugin allows you to inspect (possibly large) bioimages by displaying their shape (number of elements in each dimension), and allowing you to save each element along a chosen dimension as a separate .tif file in a folder. This is useful when you have a large movie or stack of images and you want to save each frame or slice as a separate file. Optionally, the plugin allows the user to visualize the middle element of a given dimension to help the user decide which dimension to save as separate files.
+
+The plugin currently supports the following file formats:
+- .tif
+- .ome.tiff
+- .zarr
+- .ome.zarr
+- .nd2
+- .lsm
+- .czi
+
+This plugin leverages [tifffile], [bioio], and [zarr] to circumvent loading the entire images in memory, which allows inspection of very large images.
+
+> [!CAUTION]
+> When inspecting the middle element of a dimension, or when saving one element of a dimension as a separate file, the plugin loads the element in memory, which means that at least this lone element must fit in memory.
 
 ## Installation
+
+The plugin obviously requires [napari] to run. If you don't have it yet, follow the instructions [here](https://napari.org/stable/tutorials/fundamentals/installation.html).
+
+The simplest way to install `napari-file2folder` is via the [napari] plugin manager. Open Napari, go to `Plugins > Install/Uninstall Packages...` and search for `napari-file2folder`. Click on the install button and you are ready to go!
 
 You can install `napari-file2folder` via [pip]:
 
@@ -44,6 +62,18 @@ Distributed under the terms of the [MIT] license,
 
 If you encounter any problems, please [file an issue] along with a detailed description.
 
+----------------------------------
+
+This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
+
+<!--
+Don't miss the full getting started guide to set up your new package:
+https://github.com/napari/cookiecutter-napari-plugin#getting-started
+
+and review the napari docs for plugin developers:
+https://napari.org/stable/plugins/index.html
+-->
+
 [napari]: https://github.com/napari/napari
 [Cookiecutter]: https://github.com/audreyr/cookiecutter
 [@napari]: https://github.com/napari
@@ -59,3 +89,6 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
+[tifffile]: https://github.com/cgohlke/tifffile
+[bioio]: https://github.com/bioio-devs/bioio
+[zarr]: https://github.com/zarr-developers/zarr-python
