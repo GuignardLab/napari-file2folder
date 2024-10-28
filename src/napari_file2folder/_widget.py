@@ -239,7 +239,7 @@ class File2FolderWidget(QWidget):
                     "Please choose a compatible TIF file"
                 )
             else:
-                viewer.add_image(middle_slice)
+                self._viewer.add_image(middle_slice)
         else:
             napari.utils.notifications.show_warning(
                 "Please choose a compatible TIF file"
