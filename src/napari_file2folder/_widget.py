@@ -15,6 +15,7 @@ from magicgui.widgets import (
 import os
 import tifffile
 from bioio import BioImage
+import zarr
 
 if TYPE_CHECKING:
     import napari
@@ -187,7 +188,7 @@ class File2FolderWidget(QWidget):
                 if self._save_to_folder_compress_checkbox.value:
                     compress_params.update({"compression": ("zlib", 1)})
 
-                self._lazy_save_slices_tif(
+                self._lazy_save_slices(
                     slice_dim=dimension_index,
                     file=str(path),
                     path_to_save=path_to_folder,
@@ -210,7 +211,7 @@ class File2FolderWidget(QWidget):
     def _update_dimension_choices(self):
         path = self._array_file_path.value
         if str(path) != "." and os.path.isfile(path):
-            shape = self._lazy_shape_tif(path)
+            shape = self._lazy_shape(path)
             dimensions_as_str = [f"dim {i} ({s})" for i,s in enumerate(shape)]
             self._dimension_choice_combo.choices = dimensions_as_str
         else:
@@ -229,7 +230,7 @@ class File2FolderWidget(QWidget):
                 self._dimension_choice_combo.value
             )
 
-            middle_slice = self._lazy_grab_slice_tif(
+            middle_slice = self._lazy_grab_slice(
                 element_index=int(dimension_shape/2),
                 slice_dim=dimension_index,
                 file=str(path)
@@ -246,12 +247,12 @@ class File2FolderWidget(QWidget):
             )
 
     
-    def _lazy_save_slices_tif(self, slice_dim: int, file: str, path_to_save: str,
+    def _lazy_save_slices(self, slice_dim: int, file: str, path_to_save: str,
                               compress_args: dict = {}):
         """
-        Lazily slice a multidimensional TIF file along a specified dimension.
+        Lazily slice a multidimensional file along a specified dimension.
 
-        Parameters:
+        Parameters: 
         - file: path to the image file.
         - slice_dim: the dimension (axis) along which to slice.
         - path_to_save: path to the folder where to save the slices.
@@ -261,40 +262,63 @@ class File2FolderWidget(QWidget):
         - The element of the sliced array at the specified index.
         """
 
-        img = BioImage(file)
-        shape = tuple([elem for elem in img.shape if elem != 1])
-        lazy_array = img.dask_data.reshape(shape)   
+        file = str(file)
+        if file.endswith(".tif") or file.endswith(".tiff") or file.endswith("lsm"):
+            with tifffile.TiffFile(file) as tif:
+                shape = tif.series[0].shape
+                
+                slices = [slice(None) for _ in range(len(shape))]
 
-            
-        slices = [slice(None) for _ in range(len(shape))]
+                zarr_store = tif.series[0].aszarr()
+                zarr_array = zarr.open(zarr_store)
 
-        for element_index in range(shape[slice_dim]):
-            slices[slice_dim] = element_index
-            
-            stack = lazy_array[tuple(slices)].compute()
+                for element_index in range(shape[slice_dim]):
+                    slices[slice_dim] = element_index
+                    
+                    stack = zarr_array[tuple(slices)]
 
-            name_tif = file.split(os.sep)[-1].split('.')[0]
+                    name_tif = file.split(os.sep)[-1].split('.')[0]
 
-            tifffile.imwrite(
-                f"{path_to_save}/{name_tif}_slice{element_index:03d}.tif",
-                stack,
-                **compress_args
-            )
+                    tifffile.imwrite(
+                        f"{path_to_save}/{name_tif}_slice{element_index:03d}.tif",
+                        stack,
+                        **compress_args
+                    )
+        else:
+            img = BioImage(file)
+            shape = tuple([elem for elem in img.shape if elem != 1])
+            lazy_array = img.dask_data.reshape(shape)   
 
-            self._progress_bar.setValue(
-                int((element_index+1)/shape[slice_dim]*100)
-            )
+                
+            slices = [slice(None) for _ in range(len(shape))]
+
+            for element_index in range(shape[slice_dim]):
+                slices[slice_dim] = element_index
+                
+                stack = lazy_array[tuple(slices)].compute()
+
+                name_tif = file.split(os.sep)[-1].split('.')[0]
+
+                tifffile.imwrite(
+                    f"{path_to_save}/{name_tif}_slice{element_index:03d}.tif",
+                    stack,
+                    **compress_args
+                )
+
+                self._progress_bar.setValue(
+                    int((element_index+1)/shape[slice_dim]*100)
+                )
 
                 
 
 
 
-    def _lazy_grab_slice_tif(self, slice_dim, file, element_index: int = None):
+    def _lazy_grab_slice(self, slice_dim, file, element_index: int = None):
         """
-        Lazily slice a multidimensional TIF file along a specified dimension.
+        Lazily slice a multidimensional file along a specified dimension.
 
         Parameters:
-        - file: path to the TIF file.
+        - file: path to the image file.
         - slice_dim: the dimension (axis) along which to slice.
         - element_index: the index of the element to retrieve along the slice dimension.
         
@@ -302,21 +326,30 @@ class File2FolderWidget(QWidget):
         - The element of the sliced array at the specified index.
         """
         
-    
-        img = BioImage(file)
-        shape = tuple([elem for elem in img.shape if elem != 1])
-        lazy_array = img.dask_data.reshape(shape)
-        
-        slices = [slice(None) for _ in range(len(shape))]
+        file = str(file)
+        if file.endswith(".tif") or file.endswith(".tiff") or file.endswith("lsm"):
+            with tifffile.TiffFile(file) as tif:
+                shape = tif.series[0].shape
+                slices = [slice(None) for _ in range(len(shape))]
+                zarr_array = zarr.open(tif.series[0].aszarr())
+                slices[slice_dim] = element_index
+                stack = zarr_array[tuple(slices)]
+                
+        else:
+            img = BioImage(file)
+            shape = tuple([elem for elem in img.shape if elem != 1])
+            lazy_array = img.dask_data.reshape(shape)
+            
+            slices = [slice(None) for _ in range(len(shape))]
 
-        slices[slice_dim] = element_index
+            slices[slice_dim] = element_index
 
-        stack = lazy_array[tuple(slices)]
+            stack = lazy_array[tuple(slices)].compute()
 
-        return stack.compute()
+        return stack
 
 
-    def _lazy_shape_tif(self, file):
+    def _lazy_shape(self, file):
         """
         Lazily retrieve the shape of a multidimensional file.
 
@@ -326,9 +359,13 @@ class File2FolderWidget(QWidget):
         Returns:
         - The shape of the image file.
         """
-
-        img = BioImage(file)
-        shape = tuple([elem for elem in img.shape if elem != 1])
+        file = str(file)
+        if file.endswith(".tif") or file.endswith(".tiff") or file.endswith("lsm"):
+            with tifffile.TiffFile(file) as tif:
+                shape = tif.series[0].shape
+        else:
+            img = BioImage(file)
+            shape = tuple([elem for elem in img.shape if elem != 1])
 
         return shape
 
@@ -337,7 +374,7 @@ class File2FolderWidget(QWidget):
         # layer = self._array_layer_combo.value
         path = self._array_file_path.value
         if str(path) != "." and os.path.isfile(path):
-            shape = self._lazy_shape_tif(path)
+            shape = self._lazy_shape(path)
 
             self._shape_text.setText(f"Shape: <a style=color:#1A85FF;>{shape}</a>")
         else:
