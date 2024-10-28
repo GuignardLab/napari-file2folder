@@ -17,8 +17,7 @@ import tifffile
 from bioio import BioImage
 import zarr
 
-if TYPE_CHECKING:
-    import napari
+import napari
 
 
 class File2FolderWidget(QWidget):
