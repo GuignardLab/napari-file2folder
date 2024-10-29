@@ -1,6 +1,6 @@
 # napari-file2folder
 
-[![License MIT](https://img.shields.io/pypi/l/napari-file2folder.svg?color=green)](https://github.com/jules-vanaret/napari-file2folder/raw/main/LICENSE)
+[![License MIT](https://img.shields.io/pypi/l/napari-file2folder.svg?color=green)](https://github.com/GuignardLab/napari-file2folder/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-file2folder.svg?color=green)](https://pypi.org/project/napari-file2folder)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-file2folder.svg?color=green)](https://python.org)
 [![tests](https://github.com/jules-vanaret/napari-file2folder/workflows/tests/badge.svg)](https://github.com/jules-vanaret/napari-file2folder/actions)
