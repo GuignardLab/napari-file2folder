@@ -142,7 +142,7 @@ class File2FolderWidget(QWidget):
 
 
         # self.layout().addWidget(self._array_layer_combo.native)
-        self.layout().addWidget(QLabel("<u>Select path to tif file:</u>"))
+        self.layout().addWidget(QLabel("<u>Select path to bioimage:</u>"))
         self.layout().addWidget(self._array_file_path.native)
         self.layout().addWidget(refresh_container.native)
         self.layout().addWidget(QLabel(f"Dimensions of currently selected layer:"))
