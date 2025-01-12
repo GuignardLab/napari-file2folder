@@ -36,6 +36,9 @@ class File2FolderWidget(QWidget):
         self._array_file_path.changed.connect(self._update_dimensions)
         self._array_file_path.changed.connect(self._update_dimension_choices)
 
+        self._array_file_path.label_changed.connect(self._update_dimensions)
+        self._array_file_path.label_changed.connect(self._update_dimension_choices)
+
 
         self._refresh_button = create_widget(
             widget_type="PushButton",
@@ -170,11 +173,22 @@ class File2FolderWidget(QWidget):
         
         self.layout().addStretch(1)
 
+    def _coerce_path(self, path, type):
+        path = str(path)
+        if path.startswith('file:'):
+            path = path[5:].strip()
+        if type == "folder":
+            return path, path != "." and os.path.isdir(path)
+        elif type == "file":
+            return path, path != "." and os.path.isfile(path)
+        else:
+            raise NotImplementedError
+
     def _save_to_folder(self):
-        save_path = self._save_to_folder_path.value
-        if str(save_path) != "." and os.path.isdir(save_path):
-            path = self._array_file_path.value
-            if str(path) != "." and os.path.isfile(path):
+        save_path, save_path_valid = self._coerce_path(self._save_to_folder_path.value, "folder")
+        if save_path_valid:
+            path, path_valid = self._coerce_path(self._array_file_path.value, "file")
+            if path_valid:
 
                 dimension_index, dimension_shape = self._dimension_index_from_str(
                     self._dimension_choice_combo.value
@@ -208,8 +222,8 @@ class File2FolderWidget(QWidget):
             os.makedirs(folder_path)
     
     def _update_dimension_choices(self):
-        path = self._array_file_path.value
-        if str(path) != "." and os.path.isfile(path):
+        path, path_valid = self._coerce_path(self._array_file_path.value, "file")
+        if path_valid:
             shape = self._lazy_shape(path)
             dimensions_as_str = [f"dim {i} ({s})" for i,s in enumerate(shape)]
             self._dimension_choice_combo.choices = dimensions_as_str
@@ -223,8 +237,8 @@ class File2FolderWidget(QWidget):
         return dim_index, dim_shape
 
     def _load_middle_element(self):
-        path = self._array_file_path.value
-        if str(path) != "." and os.path.isfile(path):
+        path, path_valid = self._coerce_path(self._array_file_path.value, "file")
+        if path_valid:
             dimension_index, dimension_shape = self._dimension_index_from_str(
                 self._dimension_choice_combo.value
             )
@@ -373,9 +387,9 @@ class File2FolderWidget(QWidget):
         return shape
 
     def _update_dimensions(self):
-        # layer = self._array_layer_combo.value
-        path = self._array_file_path.value
-        if str(path) != "." and os.path.isfile(path):
+        path, path_valid = self._coerce_path(self._array_file_path.value, "file")
+
+        if path_valid:
             shape = self._lazy_shape(path)
 
             self._shape_text.setText(f"Shape: <a style=color:#1A85FF;>{shape}</a>")
