@@ -16,7 +16,7 @@ import os
 import tifffile
 from bioio import BioImage
 import zarr
-
+from pathlib import Path
 import napari
 
 
@@ -178,9 +178,9 @@ class File2FolderWidget(QWidget):
         if path.startswith('file:'):
             path = path[5:].strip()
         if type == "folder":
-            return path, path != "." and os.path.isdir(path)
+            return Path(path), path != "." and os.path.isdir(path)
         elif type == "file":
-            return path, path != "." and os.path.isfile(path)
+            return Path(path), path != "." and os.path.isfile(path)
         else:
             raise NotImplementedError
 
