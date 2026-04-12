@@ -3,8 +3,6 @@
 [![License MIT](https://img.shields.io/pypi/l/napari-file2folder.svg?color=green)](https://github.com/GuignardLab/napari-file2folder/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-file2folder.svg?color=green)](https://pypi.org/project/napari-file2folder)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-file2folder.svg?color=green)](https://python.org)
-[![tests](https://github.com/jules-vanaret/napari-file2folder/workflows/tests/badge.svg)](https://github.com/jules-vanaret/napari-file2folder/actions)
-[![codecov](https://codecov.io/gh/jules-vanaret/napari-file2folder/branch/main/graph/badge.svg)](https://codecov.io/gh/jules-vanaret/napari-file2folder)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-file2folder)](https://napari-hub.org/plugins/napari-file2folder)
 
 <img src="https://github.com/GuignardLab/tapenade/blob/main/imgs/tapenade3.png" width="100">
