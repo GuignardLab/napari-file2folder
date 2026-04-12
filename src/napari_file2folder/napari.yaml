@@ -8,7 +8,7 @@ contributions:
   commands:
     - id: napari-file2folder.make_qwidget
       python_name: napari_file2folder:File2FolderWidget
-      title: Save multidimensional file as folder of tifs
+      title: Explore large images and save as folder of tifs
   widgets:
     - command: napari-file2folder.make_qwidget
-      display_name: Save multidimensional file as folder of tifs
+      display_name: Explore large images and save as folder of tifs
