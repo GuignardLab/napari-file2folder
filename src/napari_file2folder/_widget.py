@@ -199,7 +199,7 @@ class File2FolderWidget(QWidget):
 
                 compress_params = {}
                 if self._save_to_folder_compress_checkbox.value:
-                    compress_params.update({"compression": ("zlib", 1)})
+                    compress_params.update({"compression": "zlib"})
 
                 self._lazy_save_slices(
                     slice_dim=dimension_index,
