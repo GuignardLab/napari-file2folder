@@ -6,9 +6,20 @@ visibility: public
 categories: ["Annotation", "Segmentation", "Acquisition"]
 contributions:
   commands:
+    - id: napari-file2folder.get_reader
+      python_name: napari_file2folder:get_reader
+      title: Read bioimages with bioio
     - id: napari-file2folder.make_qwidget
       python_name: napari_file2folder:File2FolderWidget
       title: Explore large images and save as folder of tifs
+  readers:
+    - command: napari-file2folder.get_reader
+      accepts_directories: true
+      filename_patterns:
+        - "*.nd2"
+        - "*.czi"
+        - "*.zarr"
+        - "*.ome.zarr"
   widgets:
     - command: napari-file2folder.make_qwidget
       display_name: Explore large images and save as folder of tifs
