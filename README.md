@@ -37,6 +37,8 @@ This plugin leverages [tifffile], [bioio], and [zarr] to circumvent loading the 
 
 The plugin obviously requires [napari] to run. If you don't have it yet, follow the instructions [here](https://napari.org/stable/tutorials/fundamentals/installation.html).
 
+Compatible with Python 3.9 to 3.13 (recommended: 3.12).
+
 The simplest way to install `napari-file2folder` is via the [napari] plugin manager. Open Napari, go to `Plugins > Install/Uninstall Packages...` and search for `napari-file2folder`. Click on the install button and you are ready to go!
 
 You can install `napari-file2folder` via [pip]:
